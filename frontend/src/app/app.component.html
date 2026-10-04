@@ -1,0 +1,20 @@
+<main class="shell">
+  <header class="hero">
+    <div><p class="eyebrow">LYON · NIGHTLIFE DATA</p><h1>Where can I eat after the club?</h1><p class="subtitle">Explore restaurants near Lyon nightlife venues and plan the last stop of your evening.</p></div>
+    <div class="status" [class.bad]="!!error"><span></span>{{ error || 'Data service connected' }}</div>
+  </header>
+  <section class="stats"><article><span>Places indexed</span><strong>{{ summary.total }}</strong></article><article><span>Restaurants</span><strong>{{ summary.restaurants }}</strong></article><article><span>Clubs</span><strong>{{ summary.clubs }}</strong></article><article><span>Bars & cafés</span><strong>{{ summary.bars + summary.cafes }}</strong></article></section>
+  <section class="controls">
+    <label>Leaving from<select [(ngModel)]="selectedClubId" (ngModelChange)="onFilterChange"><option [ngValue]="null">All clubs</option><option *ngFor="let club of clubs" [ngValue]="club.id">{{ club.name }}</option></select></label>
+    <label>Maximum distance<select [(ngModel)]="maxDistance" (ngModelChange)="onFilterChange"><option [ngValue]="1000">1 km</option><option [ngValue]="2000">2 km</option><option [ngValue]="3000">3 km</option><option [ngValue]="5000">5 km</option></select></label>
+    <div class="result-count">{{ recommendations.length }} candidates found</div>
+  </section>
+  <section class="content-grid">
+    <div id="map" class="map"></div>
+    <div class="panel"><div class="panel-heading"><div><p class="eyebrow">RECOMMENDATIONS</p><h2>Nearby restaurants</h2></div><span class="badge">Walking</span></div>
+      <div *ngIf="loading" class="empty">Loading recommendations…</div><div *ngIf="!loading && !recommendations.length" class="empty">No restaurant data yet. Run the Airflow ETL and refresh.</div>
+      <div class="recommendation-list"><article class="recommendation" *ngFor="let item of recommendations"><div class="rank">{{ recommendations.indexOf(item) + 1 }}</div><div class="restaurant"><h3>{{ item.restaurant_name }}</h3><p>{{ item.restaurant_address || 'Address unavailable' }}</p><small>{{ item.opening_hours || 'Opening hours unavailable' }}</small></div><div class="distance"><strong>{{ item.walking_minutes | number:'1.0-0' }} min</strong><span>{{ item.distance_meters | number:'1.0-0' }} m</span></div></article></div>
+    </div>
+  </section>
+  <footer>Map data © OpenStreetMap contributors · Opening hours are indicative and may be incomplete.</footer>
+</main>
