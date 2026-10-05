@@ -17,7 +17,14 @@ from lyon_etl import (
 
 
 def warehouse_uri() -> str:
-    return BaseHook.get_connection("lyon_warehouse").get_uri()
+    uri = BaseHook.get_connection("lyon_warehouse").get_uri()
+    # Airflow may serialize a Postgres connection as postgres://, while
+    # SQLAlchemy expects the registered postgresql dialect name.
+    if uri.startswith("postgres://"):
+        return "postgresql+psycopg2://" + uri.removeprefix("postgres://")
+    if uri.startswith("postgresql://"):
+        return "postgresql+psycopg2://" + uri.removeprefix("postgresql://")
+    return uri
 
 
 def load_all(**context) -> int:

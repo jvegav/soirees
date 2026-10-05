@@ -74,4 +74,4 @@ npm install
 npm start
 ```
 
-The development server expects the API at `/api`; use the Docker dashboard for the simplest setup because its Nginx configuration proxies `/api` to FastAPI.
+The developmehttp://localhost:4200/nt server expects the API at `/api`; use the Docker dashboard for the simplest setup because its Nginx configuration proxies `/api` to FastAPI.

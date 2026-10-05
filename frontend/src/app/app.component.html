@@ -5,15 +5,21 @@
   </header>
   <section class="stats"><article><span>Places indexed</span><strong>{{ summary.total }}</strong></article><article><span>Restaurants</span><strong>{{ summary.restaurants }}</strong></article><article><span>Clubs</span><strong>{{ summary.clubs }}</strong></article><article><span>Bars & cafés</span><strong>{{ summary.bars + summary.cafes }}</strong></article></section>
   <section class="controls">
-    <label>Leaving from<select [(ngModel)]="selectedClubId" (ngModelChange)="onFilterChange"><option [ngValue]="null">All clubs</option><option *ngFor="let club of clubs" [ngValue]="club.id">{{ club.name }}</option></select></label>
-    <label>Maximum distance<select [(ngModel)]="maxDistance" (ngModelChange)="onFilterChange"><option [ngValue]="1000">1 km</option><option [ngValue]="2000">2 km</option><option [ngValue]="3000">3 km</option><option [ngValue]="5000">5 km</option></select></label>
-    <div class="result-count">{{ recommendations.length }} candidates found</div>
+    <label>Leaving from<select [(ngModel)]="selectedClubId" (ngModelChange)="currentLocation = null; onFilterChange()"><option [ngValue]="null">All clubs</option><option *ngFor="let club of clubs" [ngValue]="club.id">{{ club.name }}</option></select></label>
+    <label>Maximum distance<select [(ngModel)]="maxDistance" (ngModelChange)="onFilterChange()"><option [ngValue]="1000">1 km</option><option [ngValue]="2000">2 km</option><option [ngValue]="3000">3 km</option><option [ngValue]="5000">5 km</option></select></label>
+    <label>Visit time<select [(ngModel)]="visitMode" (ngModelChange)="onFilterChange()"><option value="now">Now</option><option value="custom">Choose a time</option></select></label>
+    <label *ngIf="visitMode === 'custom'">Time<input type="time" [(ngModel)]="visitTime" (ngModelChange)="onFilterChange()"></label>
+    <button class="location-button" (click)="useCurrentLocation()">Use my current location</button>
+    <label class="checkbox"><input type="checkbox" [(ngModel)]="openOnly" (ngModelChange)="onFilterChange()"> Open only</label>
+    <div class="result-count">{{ totalRecommendations }} candidates found</div>
   </section>
+  <p class="location-message" *ngIf="locationMessage">{{ locationMessage }}</p>
   <section class="content-grid">
     <div id="map" class="map"></div>
     <div class="panel"><div class="panel-heading"><div><p class="eyebrow">RECOMMENDATIONS</p><h2>Nearby restaurants</h2></div><span class="badge">Walking</span></div>
       <div *ngIf="loading" class="empty">Loading recommendations…</div><div *ngIf="!loading && !recommendations.length" class="empty">No restaurant data yet. Run the Airflow ETL and refresh.</div>
-      <div class="recommendation-list"><article class="recommendation" *ngFor="let item of recommendations"><div class="rank">{{ recommendations.indexOf(item) + 1 }}</div><div class="restaurant"><h3>{{ item.restaurant_name }}</h3><p>{{ item.restaurant_address || 'Address unavailable' }}</p><small>{{ item.opening_hours || 'Opening hours unavailable' }}</small></div><div class="distance"><strong>{{ item.walking_minutes | number:'1.0-0' }} min</strong><span>{{ item.distance_meters | number:'1.0-0' }} m</span></div></article></div>
+      <div class="recommendation-list"><article class="recommendation" *ngFor="let item of recommendations; let index = index"><div class="rank">{{ (currentPage - 1) * pageSize + index + 1 }}</div><div class="restaurant"><h3>{{ item.restaurant_name }}</h3><p>{{ item.restaurant_address || 'Address unavailable' }}</p><small>{{ item.opening_hours || 'Opening hours unavailable' }}</small></div><div class="status-pill" [class.open]="item.open_status === 'open_confirmed' || item.open_status === 'open_by_schedule'" [class.unknown]="item.open_status === 'unknown'">{{ item.open_status === 'open_confirmed' ? 'Open confirmed' : item.open_status === 'open_by_schedule' ? 'Open by schedule' : item.open_status === 'closed_confirmed' || item.open_status === 'closed_by_schedule' ? 'Closed' : item.open_status === 'hours_available' ? 'Hours available' : 'Unknown' }}</div><div class="distance"><strong>{{ item.walking_minutes | number:'1.0-0' }} min est.</strong><span>{{ item.distance_meters | number:'1.0-0' }} m straight line</span></div></article></div>
+      <div class="pagination" *ngIf="totalPages > 1"><button (click)="previousPage()" [disabled]="currentPage === 1">← Previous</button><span>Page {{ currentPage }} / {{ totalPages }}</span><button (click)="nextPage()" [disabled]="currentPage === totalPages">Next →</button></div>
     </div>
   </section>
   <footer>Map data © OpenStreetMap contributors · Opening hours are indicative and may be incomplete.</footer>

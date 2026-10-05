@@ -169,13 +169,16 @@ def load_records(records: list[dict[str, Any]], connection_uri: str) -> int:
 def transform_core(connection_uri: str) -> None:
     engine = create_engine(connection_uri)
     with engine.begin() as connection:
+        # Routes reference core.places, so remove the derived routes before
+        # rebuilding the canonical places table.
+        connection.execute(text("DELETE FROM analytics.routes"))
         connection.execute(text("DELETE FROM core.places"))
         connection.execute(text("""
             INSERT INTO core.places
             (canonical_name, category, address, postcode, city, phone, website,
              opening_hours, source_count, data_quality_score, latitude, longitude,
              geom, source_updated_at)
-            SELECT name, category, MAX(address), MAX(postcode), MAX(city), MAX(phone), MAX(website),
+            SELECT MIN(name), category, MAX(address), MAX(postcode), MAX(city), MAX(phone), MAX(website),
                    MAX(opening_hours), COUNT(DISTINCT source),
                    LEAST(100, 30 + COUNT(DISTINCT source) * 20
                      + CASE WHEN MAX(opening_hours) IS NOT NULL THEN 20 ELSE 0 END

@@ -76,6 +76,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://lyon:lyon@warehouse:5432/lyon_nightlife
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
     ports:
       - "8000:8000"
 
